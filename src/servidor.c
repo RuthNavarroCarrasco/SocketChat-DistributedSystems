@@ -6,6 +6,10 @@
 #include "comunicacion.h"
 #include "implementacion.h"
 
+
+#include <sys/socket.h>
+#include <netinet/in.h>
+
 #define SERVIDOR "/SERVIDOR"
 
 mqd_t  q_servidor;
@@ -57,49 +61,70 @@ void tratar_mensaje(void *mess)
        resultado = copy_key_implementacion(mensaje.tupla_peticion.clave, mensaje.clave2);
     
     respuesta.code_error = resultado;
-    //se abre la cola del cliente y se le devuelve el resultado enviándolo a su cola
-    q_cliente = mq_open(mensaje.q_name, O_WRONLY);
 
-	if (q_cliente == -1)
-    {
-		perror("No se puede abrir la cola del cliente");
-		mq_close(q_servidor);
-		mq_unlink(SERVIDOR);
-	}
+    //se abre el socket del cliente y se envian todos los campos de la respuesta
 
-    else 
-    {   
-		if (mq_send(q_cliente, (char *)&respuesta, sizeof(struct respuesta), 0) <0) 
-        {
-			perror("tratar_mensaje(): mq_send");
-			mq_close(q_servidor);
-			mq_unlink(SERVIDOR);
-			mq_close(q_cliente);
-		}
-        
-        else
-        {
-            printf("Respuesta enviada al cliente\n");
-        }
-	}
+
+
+
 	pthread_exit(0);
 }
 
 int main(void){
     struct peticion mess;
-    struct mq_attr attr;
 	pthread_attr_t t_attr;		
    	pthread_t thid;
-
-    attr.mq_maxmsg = 5;                
-	attr.mq_msgsize = sizeof(struct peticion);
     
-    //se crea y abre la cola del servidor
-    q_servidor = mq_open(SERVIDOR, O_CREAT|O_RDONLY, 0700, &attr);
-    if (q_servidor == -1) {
-            perror("mq_open");
-            return -1;
-        }
+    int clave;
+    char valor1[MAXZIZE];
+    int valor2;
+    double valor3;
+    int clave2;
+    int c_op;
+
+    struct sockaddr_in address; // direccion del servidor
+    int sd_server; // socket del servidor
+    int sd_client; // socket del cliente
+    int addrlen = sizeof(address); // longitud de la direccion
+    int opt = 1; // opcion para el setsockopt
+
+
+
+     // open server sockets
+     if ((sd_server = socket(AF_INET, SOCK_STREAM, 0)) == 0)
+     {
+        perror("socket: ");
+        exit(-1);
+     }
+
+
+    // socket options
+    if (setsockopt(sd_server, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt, sizeof(opt)))
+     {
+         perror("setsockopt: ");
+         exit(-1);
+     }
+
+
+    // bind + listen
+     address.sin_family      = AF_INET ;
+     address.sin_addr.s_addr = INADDR_ANY ;
+     address.sin_port        = htons(4200) ;
+
+     
+
+     if (bind(sd_server, (struct sockaddr *)&address,  sizeof(address)) < 0)
+     {
+         perror("bind: ");
+         exit(-1);
+     }
+
+     if (listen(sd_server, 3) < 0)
+     {
+         perror("listen: ") ;
+         exit(-1);
+     }
+
 
 	pthread_mutex_init(&mutex_mensaje, NULL);
 	pthread_cond_init(&cond_mensaje, NULL);
@@ -111,11 +136,31 @@ int main(void){
 
     while(1) {
         
-        //se recibe la petición del cliente
-        if (mq_receive(q_servidor, (char *) &mess, sizeof(struct peticion), 0) < 0 ){
-			perror("mq_recev");
-			return -1;
-		}
+        // se establece la conexión con el cliente
+        sd_client = accept(sd_server, (struct sockaddr *)&address,  (socklen_t*)&addrlen) ;
+       	if (sd_client <= 0)
+	     {
+		perror("accept");
+		exit(-1);
+	    }
+        
+        //se reciben todos los campos de la petición del cliente
+        read ( sd_client, &clave, sizeof(int));
+        read ( sd_client, (char *) &valor1, sizeof(char));
+        read ( sd_client, &valor2, sizeof(int));
+        read ( sd_client, &valor3, sizeof(double));
+        read ( sd_client, &clave2, sizeof(int));
+        read ( sd_client, &c_op, sizeof(int));
+
+
+        //se rellena la estructura de la petición
+        mess.tupla_peticion.clave = clave;
+        strcpy(mess.tupla_peticion.valor1, valor1);
+        mess.tupla_peticion.valor2 = valor2;
+        mess.tupla_peticion.valor3 = valor3;
+        mess.clave2 = clave2;
+        mess.c_op = c_op;
+
 
         if (pthread_create(&thid, &t_attr, (void *)tratar_mensaje, (void *)&mess) == 0) {
             // se espera a que el thread copie el mensaje 

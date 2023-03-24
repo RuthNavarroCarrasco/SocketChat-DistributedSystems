@@ -1,5 +1,5 @@
-
-#include <mqueue.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
 #include <string.h>
 #include <stdio.h>
 #include <sys/types.h>
@@ -13,78 +13,106 @@
 #define SERVIDOR "/SERVIDOR"
 
 int send_recieve(struct peticion *peticion) {
-    int ret;
-    char q_client[1024];
-    struct mq_attr attr;        // atributos de la cola
-    int qs, qc;                
+    int cod, sd_server;
+    struct sockaddr_in address;
     struct respuesta respuesta;
 
-    /* Inicializar los atributos de la cola del cliente */
-    attr.mq_maxmsg  = 10 ;
-    attr.mq_msgsize = sizeof(struct respuesta) ;
-
-
-    qs = mq_open(SERVIDOR, O_WRONLY) ;  //abrir cola del servidor
-    if (qs == -1) 
+    sd_server = socket(AF_INET, SOCK_STREAM, 0);
+    if (sd_server < 0) 
     {
-        perror("mq_open SERVIDOR: ") ;
-        return -1 ;
+        perror("Socket client: ");
+        return -1;
     }
 
+    // Nos conectamos al servidor
+    cod = connect(sd_server, (struct sockaddr *)&address, sizeof(address));
+
+    if (ret < 0) 
+    {
+        perror("connect to server: ");
+        return -1;
+    }
     
-    qc = mq_open(peticion->q_name, O_CREAT|O_RDONLY, 0664, &attr) ;  // se abre la cola del cliente
-    if (qc == -1) 
+
+
+    // Enviamos la petición
+    if (write(sd_server, (int) peticion.tupla_peticion.clave, sizeof(int)) < 0)
     {
-        perror("mq_open CLIENTE: ") ;
-        mq_close(qs) ;
+        perror("write: ");
         return -1;
     }
 
-    ret = mq_send(qs, (char *)peticion, sizeof(struct peticion), 0) ; 
-    if (ret < 0) 
-    {   
-        
-        perror("mq_send: ") ;
-        mq_close(qs) ; // en caso de error cerramos cola del servidor y del cliente
-        mq_close(qc) ;
-        mq_unlink(q_client) ;
-        return -1;
-    }
-
-
-    ret = mq_receive(qc, (char *)&respuesta, sizeof(struct respuesta), 0) ; //recibir respuesta del servidor
-    if (ret < 0) 
+    if (write(sd_server, (char *) peticion.tupla_peticion.valor1, sizeof(char)) < 0)
     {
-        perror("mq_receive: ") ;
-        mq_close(qs) ;
-        mq_close(qc) ;
-        mq_unlink(q_client) ;
+        perror("write: ");
         return -1;
     }
 
-    // Cerramos las colas y eliminamos la cola del cliente
-     ret = mq_close(qs);
-     if (ret < 0) 
-     {
-	    perror("mq_close: ") ;
-     }
 
-     ret = mq_close(qc);
-     if (ret < 0) 
-     {
-	    perror("mq_close: ") ;
-     }
+    if (write(sd_server, (int) peticion.tupla_peticion.valor2, sizeof(int)) < 0)
+    {
+        perror("write: ");
+        return -1;
+    }
 
-     ret = mq_unlink(peticion->q_name);
-     if (ret < 0) 
-     {
-	    perror("mq_unlink: ") ;
-     }
 
-    // guardamos los valores de la resuesta para el caso en el que sea necesario devolverlos (f. get)
-    strcpy(peticion->tupla_peticion.valor1,respuesta.tupla_peticion.valor1);
-    peticion->tupla_peticion.valor2 = respuesta.tupla_peticion.valor2;
-    peticion->tupla_peticion.valor3 = respuesta.tupla_peticion.valor3;
+    // Podemos mandarlo como una cadena de texto porque no se pueden pasar 64 bits, solo 32.
+    if (write(sd_server, (double) peticion.tupla_peticion.valor3, sizeof(double)) < 0)
+    {
+        perror("write: ");
+        return -1;
+    }
+
+
+    if (write(sd_server, (int) peticion.clave2, sizeof(int)) < 0)
+    {
+        perror("write: ");
+        return -1;
+    }
+
+
+    if (write(sd_server, (int) peticion.c_op, sizeof(int)) < 0)
+    {
+        perror("write: ");
+        return -1;
+    }
+
+
+
+    // recibimos la respuesta
+    if (read(sd_server, (int) respuesta.tupla_peticion.clave, sizeof(int)) < 0)
+    {
+        perror("read respuesta: ");
+        return -1;
+    }
+
+    if (read(sd_server, (char *) respuesta.tupla_peticion.valor1, sizeof(char)) < 0)
+    {
+        perror("read respuesta: ");
+        return -1;
+    }
+
+
+    if (read(sd_server, (int) respuesta.tupla_peticion.valor2, sizeof(int)) < 0)
+    {
+        perror("read respuesta: ");
+        return -1;
+    }
+
+
+    if (read(sd_server, (double) respuesta.tupla_peticion.valor3, sizeof(double)) < 0)
+    {
+        perror("read respuesta: ");
+        return -1;
+    }
+
+
+    if (read(sd_server, (int) respuesta.code_error, sizeof(int)) < 0)
+    {
+        perror("read respuesta: ");
+        return -1;
+    }
+
     return respuesta.code_error;
 }
 
@@ -103,7 +131,7 @@ int init() {
 }
 
 int set_value(int key, char *value1, int value2, double value3) {
-
+    int code_error;
     //creamos la peticion 
     struct peticion peticion = {0};
     peticion.tupla_peticion.clave = key;
@@ -111,10 +139,10 @@ int set_value(int key, char *value1, int value2, double value3) {
     peticion.tupla_peticion.valor2 = value2;
     peticion.tupla_peticion.valor3 = value3;
     
-    sprintf(peticion.q_name, "/cliente_%d", getpid());
+   // sprintf(peticion.q_name, "/cliente_%d", getpid());
     
     peticion.c_op = 1;
-    int code_error = send_recieve(&peticion);
+    code_error = send_recieve(&peticion);
 
     return code_error;
 }
