@@ -20,7 +20,8 @@ struct tupla_pet {
 struct peticion {
     struct tupla_pet tupla_peticion;     /* tupla de la peticion */
     int clave2;                         //OPCIONAL (solo para COPY)
-    //char q_name[MAXSIZE];               /* nombre de la cola cliente */
+    //int  q_name[MAXSIZE];               /* nombre de la cola cliente */
+    int sd_client;
     int c_op;                           /* codigo de operacion, 0 (INIT), 1 (SET), 2 (GET), 3 (MOD), 4 (DEL), 5 (EXIST), 6 (COPY) */
 };
 

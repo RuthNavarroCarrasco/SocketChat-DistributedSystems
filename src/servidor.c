@@ -1,8 +1,10 @@
-#include <mqueue.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
 #include <pthread.h>
 #include <stdio.h>
 #include <stdbool.h>
 #include <string.h>
+#include <stdlib.h>
 #include "comunicacion.h"
 #include "implementacion.h"
 
@@ -11,8 +13,8 @@
 #include <netinet/in.h>
 
 #define SERVIDOR "/SERVIDOR"
+#define MAXSIZE 255
 
-mqd_t  q_servidor;
 
 
 //mutex
@@ -23,8 +25,7 @@ pthread_cond_t cond_mensaje;
 void tratar_mensaje(void *mess) 
 {
     struct peticion mensaje;	        //mensaje local 
-    struct respuesta respuesta;	        // respuesta local 
-	mqd_t q_cliente;		            // cola del cliente 
+    struct respuesta respuesta;	        // respuesta local 		          
     int resultado;		                // resultado de la operación 
 
     pthread_mutex_lock(&mutex_mensaje);
@@ -64,6 +65,28 @@ void tratar_mensaje(void *mess)
 
     //se abre el socket del cliente y se envian todos los campos de la respuesta
 
+    if (write ( ((struct peticion *)mess)->sd_client, &respuesta.code_error, sizeof(int)) < 0)
+    {
+        perror("write: ");
+    }
+    if (write ( ((struct peticion *)mess)->sd_client, &respuesta.tupla_peticion.clave, sizeof(int)) < 0)
+    {
+        perror("write: ");
+    }
+    if (write ( ((struct peticion *)mess)->sd_client, (char *) &respuesta.tupla_peticion.valor1, sizeof(char)) < 0)
+    {
+        perror("write: ");  
+    }
+    if (write ( ((struct peticion *)mess)->sd_client, &respuesta.tupla_peticion.valor2, sizeof(int)) < 0)
+    {
+        perror("write: ");  
+    }
+    char valor3[100];
+    sprintf(valor3, "%lf", respuesta.tupla_peticion.valor3);
+    if (write ( ((struct peticion *)mess)->sd_client, (char *) valor3, sizeof(char *)*10) < 0)
+    {
+        perror("write: ");
+    }
 
 
 
@@ -76,9 +99,9 @@ int main(void){
    	pthread_t thid;
     
     int clave;
-    char valor1[MAXZIZE];
+    char valor1[MAXSIZE];
     int valor2;
-    double valor3;
+    char valor3[100];
     int clave2;
     int c_op;
 
@@ -148,7 +171,7 @@ int main(void){
         read ( sd_client, &clave, sizeof(int));
         read ( sd_client, (char *) &valor1, sizeof(char));
         read ( sd_client, &valor2, sizeof(int));
-        read ( sd_client, &valor3, sizeof(double));
+        read ( sd_client, &valor3, sizeof(char));
         read ( sd_client, &clave2, sizeof(int));
         read ( sd_client, &c_op, sizeof(int));
 
@@ -157,8 +180,9 @@ int main(void){
         mess.tupla_peticion.clave = clave;
         strcpy(mess.tupla_peticion.valor1, valor1);
         mess.tupla_peticion.valor2 = valor2;
-        mess.tupla_peticion.valor3 = valor3;
+        mess.tupla_peticion.valor3 = atof(valor3);
         mess.clave2 = clave2;
+        mess.sd_client = sd_client;
         mess.c_op = c_op;
 
 

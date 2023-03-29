@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <stdlib.h>
 #include "comunicacion.h"
 #include "claves.h"
 
@@ -27,7 +28,7 @@ int send_recieve(struct peticion *peticion) {
     // Nos conectamos al servidor
     cod = connect(sd_server, (struct sockaddr *)&address, sizeof(address));
 
-    if (ret < 0) 
+    if (cod < 0) 
     {
         perror("connect to server: ");
         return -1;
@@ -35,21 +36,22 @@ int send_recieve(struct peticion *peticion) {
     
 
 
+
     // Enviamos la petición
-    if (write(sd_server, (int) peticion.tupla_peticion.clave, sizeof(int)) < 0)
+    if (write(sd_server, &(peticion->tupla_peticion.clave), sizeof(int)) < 0)
     {
         perror("write: ");
         return -1;
     }
 
-    if (write(sd_server, (char *) peticion.tupla_peticion.valor1, sizeof(char)) < 0)
+    if (write(sd_server, (char *) &(peticion->tupla_peticion.valor1), sizeof(char)) < 0)
     {
         perror("write: ");
         return -1;
     }
 
 
-    if (write(sd_server, (int) peticion.tupla_peticion.valor2, sizeof(int)) < 0)
+    if (write(sd_server, &(peticion->tupla_peticion.valor2), sizeof(int)) < 0)
     {
         perror("write: ");
         return -1;
@@ -57,21 +59,23 @@ int send_recieve(struct peticion *peticion) {
 
 
     // Podemos mandarlo como una cadena de texto porque no se pueden pasar 64 bits, solo 32.
-    if (write(sd_server, (double) peticion.tupla_peticion.valor3, sizeof(double)) < 0)
+    char valor3[100];
+    sprintf(valor3, "%lf", peticion->tupla_peticion.valor3);
+    if (write(sd_server, (char *) valor3, sizeof(char *)) < 0)
     {
         perror("write: ");
         return -1;
     }
 
 
-    if (write(sd_server, (int) peticion.clave2, sizeof(int)) < 0)
+    if (write(sd_server, &(peticion->clave2), sizeof(int)) < 0)
     {
         perror("write: ");
         return -1;
     }
 
 
-    if (write(sd_server, (int) peticion.c_op, sizeof(int)) < 0)
+    if (write(sd_server, &(peticion->c_op), sizeof(int)) < 0)
     {
         perror("write: ");
         return -1;
@@ -80,7 +84,7 @@ int send_recieve(struct peticion *peticion) {
 
 
     // recibimos la respuesta
-    if (read(sd_server, (int) respuesta.tupla_peticion.clave, sizeof(int)) < 0)
+    if (read(sd_server, &(respuesta.tupla_peticion.clave), sizeof(int)) < 0)
     {
         perror("read respuesta: ");
         return -1;
@@ -93,21 +97,24 @@ int send_recieve(struct peticion *peticion) {
     }
 
 
-    if (read(sd_server, (int) respuesta.tupla_peticion.valor2, sizeof(int)) < 0)
+    if (read(sd_server, &(respuesta.tupla_peticion.valor2), sizeof(int)) < 0)
     {
         perror("read respuesta: ");
         return -1;
     }
 
 
-    if (read(sd_server, (double) respuesta.tupla_peticion.valor3, sizeof(double)) < 0)
+    if (read(sd_server, (char *) valor3, sizeof(char *)* 10 ) < 0)
     {
         perror("read respuesta: ");
         return -1;
     }
 
+    //sprintf(&respuesta.tupla_peticion.valor3, "%lf", atof(valor3));
+    respuesta.tupla_peticion.valor3 = atof(valor3);
 
-    if (read(sd_server, (int) respuesta.code_error, sizeof(int)) < 0)
+
+    if (read(sd_server, &(respuesta.code_error), sizeof(int)) < 0)
     {
         perror("read respuesta: ");
         return -1;
@@ -124,7 +131,7 @@ int init() {
     struct peticion peticion = {0};
     peticion.c_op = 0;
 
-    sprintf(peticion.q_name, "/cliente_%d", getpid());
+    
 
     int code_error = send_recieve(&peticion);
     return code_error;
@@ -155,7 +162,7 @@ int get_value(int key, char *value1, int *value2, double *value3) {
     
     peticion.c_op = 2;
 
-    sprintf(peticion.q_name, "/cliente_%d", getpid());
+    
     
     int code_error = send_recieve(&peticion );
     
@@ -176,7 +183,6 @@ int modify_value(int key, char *value1, int value2, double value3){
     peticion.tupla_peticion.valor3 = value3;
     peticion.c_op = 3;
     
-    sprintf(peticion.q_name, "/cliente_%d", getpid());
 
     int code_error = send_recieve(&peticion);
 
@@ -192,7 +198,6 @@ int delete_key(int id) {
         .c_op = 4
     };
     
-    sprintf(peticion.q_name, "/cliente_%d", getpid());
 
     int code_error = send_recieve(&peticion);
 
@@ -210,7 +215,6 @@ int exist_key(int id) {
         .c_op = 5
     };
 
-    sprintf(peticion.q_name, "/cliente_%d", getpid());
 
     int code_error = send_recieve(&peticion);
 
@@ -227,7 +231,7 @@ int copy_key(int key1, int key2) {
         .c_op = 6
     };
     
-    sprintf(peticion.q_name, "/cliente_%d", getpid());
+
 
     int code_error = send_recieve(&peticion);
 
