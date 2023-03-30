@@ -24,6 +24,7 @@ pthread_cond_t cond_mensaje;
 
 void tratar_mensaje(void *mess) 
 {
+
     struct peticion mensaje;	        //mensaje local 
     struct respuesta respuesta;	        // respuesta local 		          
     int resultado;		                // resultado de la operación 
@@ -38,6 +39,10 @@ void tratar_mensaje(void *mess)
     pthread_cond_signal(&cond_mensaje);
 	pthread_mutex_unlock(&mutex_mensaje);
     
+    printf("El código de operación e" );
+    printf("");
+    
+
     //leemos y ejecutamos la petición
 
     if (mensaje.c_op == 0) //init
@@ -63,6 +68,13 @@ void tratar_mensaje(void *mess)
     
     respuesta.code_error = resultado;
 
+    
+    respuesta.code_error = htonl(respuesta.code_error);
+    respuesta.tupla_peticion.clave = htonl(respuesta.tupla_peticion.clave);
+    unsigned long int value1 = strtoul(respuesta.tupla_peticion.valor1, NULL, 0);
+    value1 = htonl(value1);
+    respuesta.tupla_peticion.valor2 = htonl(respuesta.tupla_peticion.valor2);
+    
     //se abre el socket del cliente y se envian todos los campos de la respuesta
 
     if (write ( ((struct peticion *)mess)->sd_client, &respuesta.code_error, sizeof(int)) < 0)
@@ -73,7 +85,7 @@ void tratar_mensaje(void *mess)
     {
         perror("write: ");
     }
-    if (write ( ((struct peticion *)mess)->sd_client, (char *) &respuesta.tupla_peticion.valor1, sizeof(char)) < 0)
+    if (write ( ((struct peticion *)mess)->sd_client, &value1, sizeof(char)) < 0)
     {
         perror("write: ");  
     }
@@ -81,13 +93,20 @@ void tratar_mensaje(void *mess)
     {
         perror("write: ");  
     }
+    
     char valor3[100];
     sprintf(valor3, "%lf", respuesta.tupla_peticion.valor3);
-    if (write ( ((struct peticion *)mess)->sd_client, (char *) valor3, sizeof(char *)*10) < 0)
+
+    unsigned long int value3 = strtoul(valor3, NULL, 0);
+    value3 = htonl(value3);
+
+    if (write(((struct peticion *)mess)->sd_client, &value3, sizeof(unsigned long int)) < 0)
     {
         perror("write: ");
     }
 
+
+    close (((struct peticion *)mess)->sd_client);
 
 
 	pthread_exit(0);
@@ -99,6 +118,7 @@ int main(void){
    	pthread_t thid;
     
     int clave;
+    unsigned long int value1, value3;
     char valor1[MAXSIZE];
     int valor2;
     char valor3[100];
@@ -169,11 +189,26 @@ int main(void){
         
         //se reciben todos los campos de la petición del cliente
         read ( sd_client, &clave, sizeof(int));
-        read ( sd_client, (char *) &valor1, sizeof(char));
+        read ( sd_client, &value1, sizeof(unsigned long int));
         read ( sd_client, &valor2, sizeof(int));
-        read ( sd_client, &valor3, sizeof(char));
+        read ( sd_client, &value3, sizeof(unsigned long int));
         read ( sd_client, &clave2, sizeof(int));
         read ( sd_client, &c_op, sizeof(int));
+        
+        printf("0. HE LEIDO %d\n", clave);
+        
+        
+        clave = ntohl(clave);
+        printf("HE LEIDO %d\n", clave);
+        value1 = ntohl(value1);
+        sprintf(valor1, "%lu", value1);
+
+        valor2 = ntohl(valor2);
+
+        value3 = ntohl(value3);
+        sprintf(valor3, "%lu", value3);
+        clave2 = ntohl(clave2);
+        c_op = ntohl(c_op);
 
 
         //se rellena la estructura de la petición
