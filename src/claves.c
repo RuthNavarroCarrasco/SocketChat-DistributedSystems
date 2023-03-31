@@ -48,6 +48,7 @@ int send_recieve(struct peticion *peticion) {
         return -1;
     }
     
+    printf("El código de operación es: %d\n", peticion->c_op);
 
      // Podemos mandarlo como una cadena de texto porque no se pueden pasar 64 bits, solo 32.
     

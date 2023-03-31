@@ -39,8 +39,9 @@ void tratar_mensaje(void *mess)
     pthread_cond_signal(&cond_mensaje);
 	pthread_mutex_unlock(&mutex_mensaje);
     
-    printf("El código de operación e" );
-    printf("");
+
+    printf("El código de operación ARRIBA ES es: %d\n", mensaje.c_op);
+    printf("El valor1 es: %s\n", mensaje.tupla_peticion.valor1);
     
 
     //leemos y ejecutamos la petición
@@ -190,12 +191,11 @@ int main(void){
         //se reciben todos los campos de la petición del cliente
         read ( sd_client, &clave, sizeof(int));
         read ( sd_client, &value1, sizeof(unsigned long int));
-        read ( sd_client, &valor2, sizeof(int));
+        read ( sd_client,(char*) &valor2, sizeof(int));
         read ( sd_client, &value3, sizeof(unsigned long int));
         read ( sd_client, &clave2, sizeof(int));
         read ( sd_client, &c_op, sizeof(int));
-        
-        printf("0. HE LEIDO %d\n", clave);
+      
         
         
         clave = ntohl(clave);
@@ -210,6 +210,9 @@ int main(void){
         clave2 = ntohl(clave2);
         c_op = ntohl(c_op);
 
+        printf("OPERACIÓN %d\n", c_op);
+
+        printf("\nEl valor2 es: %d\n\n", valor2);
 
         //se rellena la estructura de la petición
         mess.tupla_peticion.clave = clave;
