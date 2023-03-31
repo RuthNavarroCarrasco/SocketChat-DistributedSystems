@@ -30,14 +30,14 @@ int send_recieve(struct peticion *peticion) {
     address.sin_family = AF_INET ;
      address.sin_port   = htons(4200) ;
 
-     cod = inet_pton(AF_INET, "127.0.0.1", &address.sin_addr) ;
+    cod = inet_pton(AF_INET, "127.0.0.1", &address.sin_addr) ;
 
-     if (cod <= 0) 
-     { 
-         printf("\nInvalid address or address not supported\n") ;
-	 close(sd_server) ;
-         exit(-1);
-     } 
+    if (cod <= 0) 
+    { 
+        printf("\nInvalid address or address not supported\n") ;
+    close(sd_server) ;
+        exit(-1);
+    } 
 
     // Nos conectamos al servidor
     cod = connect(sd_server, (struct sockaddr *)&address, sizeof(address));
@@ -48,39 +48,42 @@ int send_recieve(struct peticion *peticion) {
         return -1;
     }
     
-    printf("El código de operación es: %d\n", peticion->c_op);
+    //printf("El código de operación es: %d\n", peticion->c_op);
 
      // Podemos mandarlo como una cadena de texto porque no se pueden pasar 64 bits, solo 32.
     
     char valor3[100];
     //Pasamos de double a string el valor3 (para poderlo tratar con sockets)
+    
     sprintf(valor3, "%lf", peticion->tupla_peticion.valor3);
+    //printf("En claves.c el valor de valor3 en string es: %s\n", valor3);
+   
     //pasamos de string a long int(para el htonl)
-    unsigned long int value3 = strtoul(valor3, NULL, 0);
+    //unsigned long int value3 = strtoul(valor3, NULL, 0);
     
     //pasamos el valor1 de stringa long int (para el htonl)
-    unsigned long int value1 = strtoul(peticion->tupla_peticion.valor1, NULL, 0);
+    //unsigned long int value1 = strtoul(peticion->tupla_peticion.valor1, NULL, 0);
 
 
 
 
     peticion->tupla_peticion.clave = htonl(peticion->tupla_peticion.clave);
-    value1 = htonl(value1);
+   // value1 = htonl(value1);
     peticion->tupla_peticion.valor2 = htonl(peticion->tupla_peticion.valor2);
-    value3 = htonl(value3);
+    //value3 = htonl(value3);
     peticion->clave2 = htonl(peticion->clave2);
     peticion->c_op = htonl(peticion->c_op);
 
 
 
     // Enviamos la petición
-    if (write(sd_server, &(peticion->tupla_peticion.clave), sizeof(int)) < 0)
+    if (write(sd_server, (char *)&(peticion->tupla_peticion.clave), sizeof(int)) < 0)
     {
         perror("write: ");
         return -1;
     }
 
-    if (write(sd_server, &value1, sizeof(unsigned long int)) < 0)
+    if (write(sd_server,(char *) &peticion->tupla_peticion.valor1, sizeof(peticion->tupla_peticion.valor1)) < 0)
     {
         perror("write: ");
         return -1;
@@ -95,21 +98,21 @@ int send_recieve(struct peticion *peticion) {
 
 
    
-    if (write(sd_server, &value3, sizeof(unsigned long int)) < 0)
+    if (write(sd_server, (char *) &valor3, sizeof(valor3)) < 0)
     {
         perror("write: ");
         return -1;
     }
 
 
-    if (write(sd_server, &(peticion->clave2), sizeof(int)) < 0)
+    if (write(sd_server, (char *) &(peticion->clave2), sizeof(int)) < 0)
     {
         perror("write: ");
         return -1;
     }
 
 
-    if (write(sd_server, &(peticion->c_op), sizeof(int)) < 0)
+    if (write(sd_server, (char *) &(peticion->c_op), sizeof(int)) < 0)
     {
         perror("write: ");
         return -1;
@@ -118,27 +121,27 @@ int send_recieve(struct peticion *peticion) {
 
 
     // recibimos la respuesta
-    if (read(sd_server, &(respuesta.tupla_peticion.clave), sizeof(int)) < 0)
+    if (read(sd_server, (char *) &(respuesta.tupla_peticion.clave), sizeof(int)) < 0)
     {
         perror("c read respuesta: ");
         return -1;
     }
 
-    if (read(sd_server, &value1, sizeof(unsigned long int)) < 0)
+    if (read(sd_server, &respuesta.tupla_peticion.valor3, sizeof(respuesta.tupla_peticion.valor3)) < 0)
     {
         perror(" 1 read respuesta: ");
         return -1;
     }
 
 
-    if (read(sd_server, &(respuesta.tupla_peticion.valor2), sizeof(int)) < 0)
+    if (read(sd_server, (char *) &(respuesta.tupla_peticion.valor2), sizeof(int)) < 0)
     {
         perror("2 read respuesta: ");
         return -1;
     }
 
 
-    if (read(sd_server, &value3, sizeof(unsigned long int)) < 0)
+    if (read(sd_server, (char *) &respuesta.tupla_peticion.valor3, sizeof(respuesta.tupla_peticion.valor3)) < 0)
     {
         perror("3 read respuesta: ");
         return -1;
@@ -149,7 +152,7 @@ int send_recieve(struct peticion *peticion) {
     //sprintf(&respuesta.tupla_peticion.valor3, "%lf", atof(valor3));
 
 
-    if (read(sd_server, &(respuesta.code_error), sizeof(int)) < 0)
+    if (read(sd_server, (char *) &(respuesta.code_error), sizeof(int)) < 0)
     {
         perror("4 read respuesta: ");
         return -1;
@@ -158,16 +161,16 @@ int send_recieve(struct peticion *peticion) {
 
 
     respuesta.tupla_peticion.clave = ntohl(respuesta.tupla_peticion.clave);
-    value1 = ntohl(value1);
+    //value1 = ntohl(value1);
     respuesta.tupla_peticion.valor2 = ntohl(respuesta.tupla_peticion.valor2);
-    value3 = ntohl(value3);
+    //value3 = ntohl(value3);
     respuesta.code_error = ntohl(respuesta.code_error);
 
     // pasar a string value1
-    sprintf(respuesta.tupla_peticion.valor1, "%lu", value1);
+    //sprintf(respuesta.tupla_peticion.valor1, "%lu", value1);
 
     // pasar a string value3 y luego a double, que por qué no directamente???? Porque nos gusta el riesgo
-    sprintf(valor3, "%lu", value3);
+    //sprintf(valor3, "%lu", value3);
     respuesta.tupla_peticion.valor3 = atof(valor3);
      
     

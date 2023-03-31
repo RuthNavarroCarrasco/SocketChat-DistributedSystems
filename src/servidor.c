@@ -40,8 +40,8 @@ void tratar_mensaje(void *mess)
 	pthread_mutex_unlock(&mutex_mensaje);
     
 
-    printf("El código de operación ARRIBA ES es: %d\n", mensaje.c_op);
-    printf("El valor1 es: %s\n", mensaje.tupla_peticion.valor1);
+    printf("\n\nEl código de operación ARRIBA ES es: %d\n", mensaje.c_op);
+   // printf("El valor1 es: %s\n", mensaje.tupla_peticion.valor1);
     
 
     //leemos y ejecutamos la petición
@@ -72,8 +72,14 @@ void tratar_mensaje(void *mess)
     
     respuesta.code_error = htonl(respuesta.code_error);
     respuesta.tupla_peticion.clave = htonl(respuesta.tupla_peticion.clave);
-    unsigned long int value1 = strtoul(respuesta.tupla_peticion.valor1, NULL, 0);
-    value1 = htonl(value1);
+    printf("La clave que voy a enviar es: %d\n ", respuesta.tupla_peticion.clave);
+    printf("El valor1 que voy a enviar es: %s\n ", respuesta.tupla_peticion.valor1);
+    printf("El valor2 que voy a enviar es: %d\n ", respuesta.tupla_peticion.valor2);
+    printf("El valor3 que voy a enviar es: %lf\n ", respuesta.tupla_peticion.valor3);
+    printf("El cod error que voy a enviar es: %d\n ", respuesta.code_error);
+
+    //unsigned long int value1 = strtoul(respuesta.tupla_peticion.valor1, NULL, 0);
+    //value1 = htonl(value1);
     respuesta.tupla_peticion.valor2 = htonl(respuesta.tupla_peticion.valor2);
     
     //se abre el socket del cliente y se envian todos los campos de la respuesta
@@ -86,7 +92,7 @@ void tratar_mensaje(void *mess)
     {
         perror("write: ");
     }
-    if (write ( ((struct peticion *)mess)->sd_client, &value1, sizeof(char)) < 0)
+    if (write ( ((struct peticion *)mess)->sd_client, &respuesta.tupla_peticion.valor1, sizeof(respuesta.tupla_peticion.valor1)) < 0)
     {
         perror("write: ");  
     }
@@ -98,10 +104,10 @@ void tratar_mensaje(void *mess)
     char valor3[100];
     sprintf(valor3, "%lf", respuesta.tupla_peticion.valor3);
 
-    unsigned long int value3 = strtoul(valor3, NULL, 0);
-    value3 = htonl(value3);
+    //unsigned long int value3 = strtoul(valor3, NULL, 0);
+    //value3 = htonl(value3);
 
-    if (write(((struct peticion *)mess)->sd_client, &value3, sizeof(unsigned long int)) < 0)
+    if (write(((struct peticion *)mess)->sd_client, &valor3, sizeof(valor3)) < 0)
     {
         perror("write: ");
     }
@@ -189,30 +195,20 @@ int main(void){
 	    }
         
         //se reciben todos los campos de la petición del cliente
-        read ( sd_client, &clave, sizeof(int));
-        read ( sd_client, &value1, sizeof(unsigned long int));
-        read ( sd_client,(char*) &valor2, sizeof(int));
-        read ( sd_client, &value3, sizeof(unsigned long int));
-        read ( sd_client, &clave2, sizeof(int));
-        read ( sd_client, &c_op, sizeof(int));
+        read ( sd_client, (char*) &clave, sizeof(int));
+        read ( sd_client, (char*) &valor1, sizeof(valor1));
+        read ( sd_client, (char*) &valor2, sizeof(int));
+        read ( sd_client, (char*) &valor3, sizeof(valor3));
+        read ( sd_client, (char*) &clave2, sizeof(int));
+        read ( sd_client, (char*) &c_op, sizeof(int));
       
         
         
         clave = ntohl(clave);
-        printf("HE LEIDO %d\n", clave);
-        value1 = ntohl(value1);
-        sprintf(valor1, "%lu", value1);
-
         valor2 = ntohl(valor2);
-
-        value3 = ntohl(value3);
-        sprintf(valor3, "%lu", value3);
         clave2 = ntohl(clave2);
         c_op = ntohl(c_op);
 
-        printf("OPERACIÓN %d\n", c_op);
-
-        printf("\nEl valor2 es: %d\n\n", valor2);
 
         //se rellena la estructura de la petición
         mess.tupla_peticion.clave = clave;
@@ -222,7 +218,7 @@ int main(void){
         mess.clave2 = clave2;
         mess.sd_client = sd_client;
         mess.c_op = c_op;
-
+    
 
         if (pthread_create(&thid, &t_attr, (void *)tratar_mensaje, (void *)&mess) == 0) {
             // se espera a que el thread copie el mensaje 
