@@ -84,10 +84,7 @@ void tratar_mensaje(void *mess)
     
     //se abre el socket del cliente y se envian todos los campos de la respuesta
 
-    if (write ( ((struct peticion *)mess)->sd_client, &respuesta.code_error, sizeof(int)) < 0)
-    {
-        perror("write: ");
-    }
+
     if (write ( ((struct peticion *)mess)->sd_client, &respuesta.tupla_peticion.clave, sizeof(int)) < 0)
     {
         perror("write: ");
@@ -112,7 +109,11 @@ void tratar_mensaje(void *mess)
         perror("write: ");
     }
 
-
+    if (write ( ((struct peticion *)mess)->sd_client, &respuesta.code_error, sizeof(int)) < 0)
+    {
+        perror("write: ");
+    }
+    
     close (((struct peticion *)mess)->sd_client);
 
 

@@ -127,7 +127,7 @@ int send_recieve(struct peticion *peticion) {
         return -1;
     }
 
-    if (read(sd_server, &respuesta.tupla_peticion.valor3, sizeof(respuesta.tupla_peticion.valor3)) < 0)
+    if (read(sd_server, &respuesta.tupla_peticion.valor1, sizeof(respuesta.tupla_peticion.valor1)) < 0)
     {
         perror(" 1 read respuesta: ");
         return -1;
@@ -141,16 +141,13 @@ int send_recieve(struct peticion *peticion) {
     }
 
 
-    if (read(sd_server, (char *) &respuesta.tupla_peticion.valor3, sizeof(respuesta.tupla_peticion.valor3)) < 0)
+    if (read(sd_server, (char *) &valor3, sizeof(valor3)) < 0)
     {
         perror("3 read respuesta: ");
         return -1;
     }
 
     
-
-    //sprintf(&respuesta.tupla_peticion.valor3, "%lf", atof(valor3));
-
 
     if (read(sd_server, (char *) &(respuesta.code_error), sizeof(int)) < 0)
     {
@@ -165,6 +162,13 @@ int send_recieve(struct peticion *peticion) {
     respuesta.tupla_peticion.valor2 = ntohl(respuesta.tupla_peticion.valor2);
     //value3 = ntohl(value3);
     respuesta.code_error = ntohl(respuesta.code_error);
+    
+    printf("He recibido como valor1 %s\n: ", respuesta.tupla_peticion.valor1);
+
+    printf("He recibido como valor2 %d\n: ", respuesta.tupla_peticion.valor2);
+    
+
+
 
     // pasar a string value1
     //sprintf(respuesta.tupla_peticion.valor1, "%lu", value1);
@@ -172,6 +176,12 @@ int send_recieve(struct peticion *peticion) {
     // pasar a string value3 y luego a double, que por qué no directamente???? Porque nos gusta el riesgo
     //sprintf(valor3, "%lu", value3);
     respuesta.tupla_peticion.valor3 = atof(valor3);
+    printf("He recibido como valor3 %f\n: ", respuesta.tupla_peticion.valor3);
+
+    // guardamos los valores de la resuesta para el caso en el que sea necesario devolverlos (f. get)
+    strcpy(peticion->tupla_peticion.valor1, respuesta.tupla_peticion.valor1);
+    peticion->tupla_peticion.valor2 = respuesta.tupla_peticion.valor2;
+    peticion->tupla_peticion.valor3 = respuesta.tupla_peticion.valor3;
      
     
     return respuesta.code_error;
@@ -220,6 +230,7 @@ int get_value(int key, char *value1, int *value2, double *value3) {
     
     int code_error = send_recieve(&peticion );
     
+    printf("EL VALOR 2 DE LA RESPUESTA ES %d\n", peticion.tupla_peticion.valor2);
     strcpy(value1, peticion.tupla_peticion.valor1);
     *value2 = peticion.tupla_peticion.valor2;
     *value3 = peticion.tupla_peticion.valor3;

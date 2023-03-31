@@ -5,11 +5,11 @@
 
 /*El cliente se encarga de enviar peticiones al servidor */
 
-int clave = 45;              
-char valor1[MAXSIZE] = "Mensaje original";   
+int clave = 10;              
+char valor1[MAXSIZE] = "Enviando";   
 int valor2 = 4;             
 double valor3 = 1.72;
-int clave2 = 25;
+int clave2 = 102;
 
 
 int main() 

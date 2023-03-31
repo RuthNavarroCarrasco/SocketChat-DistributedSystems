@@ -12,7 +12,7 @@ LIB_OBJS = $(LIB_FILES:.c=.o)
 SERVER = servidor.c implementacion.c
 
 all: cliente servidor
-	# rm ../tuplas/*
+	 rm ../tuplas/*
 
 cliente: $(CLIENT) $(LIB)
 	$(CC) $(DFLAGS) cliente.c -lclaves -o cliente $(LDFLAGS)
