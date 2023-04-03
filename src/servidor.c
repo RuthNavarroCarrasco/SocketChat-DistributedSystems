@@ -70,8 +70,6 @@ void tratar_mensaje(void *mess)
 
     
     respuesta.code_error = resultado;
-
-    
     respuesta.code_error = htonl(respuesta.code_error);
     respuesta.tupla_peticion.clave = htonl(respuesta.tupla_peticion.clave);
     respuesta.tupla_peticion.valor2 = htonl(respuesta.tupla_peticion.valor2);
@@ -132,7 +130,6 @@ int main(void){
     int opt = 1; // opcion para el setsockopt
 
 
-
      // open server sockets
      if ((sd_server = socket(AF_INET, SOCK_STREAM, 0)) == 0)
      {
@@ -153,19 +150,18 @@ int main(void){
      address.sin_addr.s_addr = INADDR_ANY ;
      address.sin_port        = htons(4200) ;
 
-     
 
-     if (bind(sd_server, (struct sockaddr *)&address,  sizeof(address)) < 0)
-     {
-         perror("bind: ");
-         exit(-1);
-     }
+    if (bind(sd_server, (struct sockaddr *)&address,  sizeof(address)) < 0)
+    {
+        perror("bind: ");
+        exit(-1);
+    }
 
-     if (listen(sd_server, 3) < 0)
-     {
-         perror("listen: ") ;
-         exit(-1);
-     }
+    if (listen(sd_server, 3) < 0)
+    {
+        perror("listen: ") ;
+        exit(-1);
+    }
 
 
 	pthread_mutex_init(&mutex_mensaje, NULL);
