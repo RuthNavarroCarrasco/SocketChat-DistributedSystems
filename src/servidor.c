@@ -110,7 +110,7 @@ void tratar_mensaje(void *mess)
 }
 
 
-int main(void){
+int main(int argc, char *argv[]){
     struct peticion mess;
 	pthread_attr_t t_attr;		
    	pthread_t thid;
@@ -128,7 +128,15 @@ int main(void){
     int sd_client; // socket del cliente
     int addrlen = sizeof(address); // longitud de la direccion
     int opt = 1; // opcion para el setsockopt
+    int port_number;
 
+    if (argc < 2) 
+    {
+        printf("Pon el segundo argumento por favor te lo pido\n");
+        exit(-1);
+    } else {
+        port_number = atoi(argv[1]);
+    }
 
      // open server sockets
      if ((sd_server = socket(AF_INET, SOCK_STREAM, 0)) == 0)
@@ -148,7 +156,7 @@ int main(void){
     // bind + listen
      address.sin_family      = AF_INET ;
      address.sin_addr.s_addr = INADDR_ANY ;
-     address.sin_port        = htons(4200) ;
+     address.sin_port        = htons(port_number) ;
 
 
     if (bind(sd_server, (struct sockaddr *)&address,  sizeof(address)) < 0)

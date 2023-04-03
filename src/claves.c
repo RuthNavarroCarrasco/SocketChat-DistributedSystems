@@ -13,10 +13,32 @@
 #define formato_fichero ".dat"      // definimos el formato de fichero. En este caso, extension .dat
 
 
+int obtener_var_entorno(int port_number)
+{
+    char *ip;
+    char *port;
+    ip = getenv("IP_TUPLAS");
+    port = getenv("PORT_TUPLAS");
+    if (ip == NULL || port == NULL)
+    {
+        printf("Variables de entorno no definidas\n");
+        exit(-1);
+    }
+    else
+        port_number = atoi(port);
+
+    return port_number;
+}
+
+
 int send_recieve(struct peticion *peticion) {
     int cod, sd_server;
     struct sockaddr_in address;
     struct respuesta respuesta;
+
+    int port_number;
+
+    port_number = obtener_var_entorno(port_number);
 
     sd_server = socket(AF_INET, SOCK_STREAM, 0);
     if (sd_server < 0) 
@@ -27,7 +49,7 @@ int send_recieve(struct peticion *peticion) {
 
 
     address.sin_family = AF_INET ;
-    address.sin_port   = htons(4200) ;
+    address.sin_port   = htons(port_number) ;
 
     cod = inet_pton(AF_INET, "127.0.0.1", &address.sin_addr) ;
 
@@ -143,7 +165,7 @@ int send_recieve(struct peticion *peticion) {
     respuesta.tupla_peticion.valor2 = ntohl(respuesta.tupla_peticion.valor2);
     respuesta.code_error = ntohl(respuesta.code_error);
     respuesta.tupla_peticion.valor3 = atof(valor3);
-    
+
     // guardamos los valores de la resuesta para el caso en el que sea necesario devolverlos (f. get)
     strcpy(peticion->tupla_peticion.valor1, respuesta.tupla_peticion.valor1);
     peticion->tupla_peticion.valor2 = respuesta.tupla_peticion.valor2;

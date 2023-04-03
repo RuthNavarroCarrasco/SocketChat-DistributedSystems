@@ -1,7 +1,8 @@
-#define MAXSIZE 255
 #include <stdio.h>
 #include <stdlib.h>
 #include "claves.h"
+
+#define MAXSIZE 255
 
 /*El cliente se encarga de enviar peticiones al servidor */
 
@@ -15,7 +16,7 @@ int clave2 = 102;
 int main() 
 {
     int code_error;
-
+    int cod_var;
     
     code_error = set_value(clave, valor1, valor2, valor3);
     if (code_error < 0) 
@@ -24,8 +25,6 @@ int main()
     } else {
         printf("set_value(): Se ha creado correctamente la clave %d. Código de error: %d\n\n",clave, code_error);
     }
-
-
 
     
     code_error = get_value(clave, valor1, &valor2, &valor3);
@@ -54,7 +53,6 @@ int main()
     else{
         printf("exist_key(): El fichero sí existe. Código de error: %d\n\n", code_error);
     }
-
     
     code_error = copy_key(clave, clave2);
     if (code_error < 0) 
@@ -81,8 +79,6 @@ int main()
     } else {
         printf("init(): Se han destruido correctametne todas las tuplas. Código de error: %d\n", code_error);
     }
-
-    
     
     return 0; 
 }
