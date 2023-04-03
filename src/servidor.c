@@ -40,26 +40,34 @@ void tratar_mensaje(void *mess)
 
     //leemos y ejecutamos la petición
 
-    if (mensaje.c_op == 0) //init
+    switch(mensaje.c_op) {
+    case 0:
         resultado = init_implementacion();
-
-   if (mensaje.c_op  == 1) //set
+        break;
+    case 1:
         resultado = set_value_implementacion(mensaje.tupla_peticion);
-
-     if (mensaje.c_op == 2) //get 
-        resultado = get_value_implementacion(mensaje.tupla_peticion, &respuesta); 
-
-    if (mensaje.c_op  == 3) //mod
+        break;
+    case 2:
+        resultado = get_value_implementacion(mensaje.tupla_peticion, &respuesta);
+        break;
+    case 3:
         resultado = modify_value_implementacion(mensaje.tupla_peticion);
-
-    if (mensaje.c_op == 4) //del
+        break;
+    case 4:
         resultado = delete_key_implementacion(mensaje.tupla_peticion.clave);
+        break;
+    case 5:
+        resultado = exist_key_implementacion(mensaje.tupla_peticion.clave);
+        break;
+    case 6:
+        resultado = copy_key_implementacion(mensaje.tupla_peticion.clave, mensaje.clave2);
+        break;
+    default:
+        printf("Error: código de operación no válido.\n");
+        exit(-1);
+        break;
+}
 
-    if (mensaje.c_op  == 5) //exist
-       resultado = exist_key_implementacion(mensaje.tupla_peticion.clave);
-
-    if (mensaje.c_op  == 6) //copy
-       resultado = copy_key_implementacion(mensaje.tupla_peticion.clave, mensaje.clave2);
     
     respuesta.code_error = resultado;
 
