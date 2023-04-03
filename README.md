@@ -12,7 +12,7 @@ make
 ./servidor <port>
 ```
 
-Donde <port> es el número de puerto que queremos que use el servidor.
+Donde *port* es el número de puerto que queremos que use el servidor.
 
 #### Terminal 2
 
@@ -22,5 +22,5 @@ En la **terminal 2** será donde ejecutemos el `cliente`. El cliente debe ser ej
 env IP_TUPLAS=localhost PORT_TUPLAS=<port> ./cliente
 ```
 
-Donde <port> es el mismo puerto que hemos puesto en el lado del cliente, Cabe aclarar que si no es así, no podrá haber comunicación entre el servidor y el cliente, ya que ambos tendrán números de puerto distintos. 
+Donde *port* es el mismo puerto que hemos puesto en el lado del cliente, Cabe aclarar que si no es así, no podrá haber comunicación entre el servidor y el cliente, ya que ambos tendrán números de puerto distintos. 
 
