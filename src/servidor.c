@@ -1,4 +1,5 @@
 #include <sys/socket.h>
+#include <unistd.h>
 #include <netinet/in.h>
 #include <pthread.h>
 #include <stdio.h>
@@ -101,6 +102,7 @@ void tratar_mensaje(void *mess)
 
 	pthread_exit(0);
 }
+
 
 int main(void){
     struct peticion mess;
