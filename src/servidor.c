@@ -7,12 +7,9 @@
 #include <stdlib.h>
 #include "comunicacion.h"
 #include "implementacion.h"
-
-
 #include <sys/socket.h>
 #include <netinet/in.h>
 
-#define SERVIDOR "/SERVIDOR"
 #define MAXSIZE 255
 
 
@@ -38,11 +35,7 @@ void tratar_mensaje(void *mess)
     mensaje_no_copiado = false;
     pthread_cond_signal(&cond_mensaje);
 	pthread_mutex_unlock(&mutex_mensaje);
-    
 
-    printf("\n\nEl código de operación ARRIBA ES es: %d\n", mensaje.c_op);
-   // printf("El valor1 es: %s\n", mensaje.tupla_peticion.valor1);
-    
 
     //leemos y ejecutamos la petición
 
@@ -72,18 +65,9 @@ void tratar_mensaje(void *mess)
     
     respuesta.code_error = htonl(respuesta.code_error);
     respuesta.tupla_peticion.clave = htonl(respuesta.tupla_peticion.clave);
-    printf("La clave que voy a enviar es: %d\n ", respuesta.tupla_peticion.clave);
-    printf("El valor1 que voy a enviar es: %s\n ", respuesta.tupla_peticion.valor1);
-    printf("El valor2 que voy a enviar es: %d\n ", respuesta.tupla_peticion.valor2);
-    printf("El valor3 que voy a enviar es: %lf\n ", respuesta.tupla_peticion.valor3);
-    printf("El cod error que voy a enviar es: %d\n ", respuesta.code_error);
-
-    //unsigned long int value1 = strtoul(respuesta.tupla_peticion.valor1, NULL, 0);
-    //value1 = htonl(value1);
     respuesta.tupla_peticion.valor2 = htonl(respuesta.tupla_peticion.valor2);
     
-    //se abre el socket del cliente y se envian todos los campos de la respuesta
-
+    // Se envian todos los campos de la respuesta
 
     if (write ( ((struct peticion *)mess)->sd_client, &respuesta.tupla_peticion.clave, sizeof(int)) < 0)
     {
@@ -101,8 +85,6 @@ void tratar_mensaje(void *mess)
     char valor3[100];
     sprintf(valor3, "%lf", respuesta.tupla_peticion.valor3);
 
-    //unsigned long int value3 = strtoul(valor3, NULL, 0);
-    //value3 = htonl(value3);
 
     if (write(((struct peticion *)mess)->sd_client, &valor3, sizeof(valor3)) < 0)
     {
@@ -147,7 +129,6 @@ int main(void){
         perror("socket: ");
         exit(-1);
      }
-
 
     // socket options
     if (setsockopt(sd_server, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt, sizeof(opt)))
@@ -203,7 +184,6 @@ int main(void){
         read ( sd_client, (char*) &clave2, sizeof(int));
         read ( sd_client, (char*) &c_op, sizeof(int));
       
-        
         
         clave = ntohl(clave);
         valor2 = ntohl(valor2);

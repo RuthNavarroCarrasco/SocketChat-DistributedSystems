@@ -143,11 +143,9 @@ int delete_key_implementacion(int key)
 {
     char str_key[20];
     char nombre_fichero[50];
-    
 
     sprintf(str_key, "%d", key);
     sprintf(nombre_fichero, "%s%s%s", peticion_root, str_key, formato_fichero);
-    printf("\nEL nombre del fichero es %s\n", nombre_fichero);
 
     // Comprobamos si hay existencia del fichero
     if (access(nombre_fichero, F_OK) != 0) 

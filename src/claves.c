@@ -12,7 +12,6 @@
 #define peticion_root "../peticion/" // raiz para coger los ficheros
 #define formato_fichero ".dat"      // definimos el formato de fichero. En este caso, extension .dat
 
-#define SERVIDOR "/SERVIDOR"
 
 int send_recieve(struct peticion *peticion) {
     int cod, sd_server;
@@ -28,14 +27,14 @@ int send_recieve(struct peticion *peticion) {
 
 
     address.sin_family = AF_INET ;
-     address.sin_port   = htons(4200) ;
+    address.sin_port   = htons(4200) ;
 
     cod = inet_pton(AF_INET, "127.0.0.1", &address.sin_addr) ;
 
     if (cod <= 0) 
     { 
         printf("\nInvalid address or address not supported\n") ;
-    close(sd_server) ;
+        close(sd_server) ;
         exit(-1);
     } 
 
@@ -48,29 +47,14 @@ int send_recieve(struct peticion *peticion) {
         return -1;
     }
     
-    //printf("El código de operación es: %d\n", peticion->c_op);
-
-     // Podemos mandarlo como una cadena de texto porque no se pueden pasar 64 bits, solo 32.
     
+    // Pasamos de double a string el valor3 (para poderlo tratar con sockets) porque no se pueden pasar 64 bits, solo 32.
     char valor3[100];
-    //Pasamos de double a string el valor3 (para poderlo tratar con sockets)
-    
     sprintf(valor3, "%lf", peticion->tupla_peticion.valor3);
-    //printf("En claves.c el valor de valor3 en string es: %s\n", valor3);
-   
-    //pasamos de string a long int(para el htonl)
-    //unsigned long int value3 = strtoul(valor3, NULL, 0);
     
-    //pasamos el valor1 de stringa long int (para el htonl)
-    //unsigned long int value1 = strtoul(peticion->tupla_peticion.valor1, NULL, 0);
-
-
-
 
     peticion->tupla_peticion.clave = htonl(peticion->tupla_peticion.clave);
-   // value1 = htonl(value1);
     peticion->tupla_peticion.valor2 = htonl(peticion->tupla_peticion.valor2);
-    //value3 = htonl(value3);
     peticion->clave2 = htonl(peticion->clave2);
     peticion->c_op = htonl(peticion->c_op);
 
@@ -155,35 +139,16 @@ int send_recieve(struct peticion *peticion) {
         return -1;
     }
 
-
-
     respuesta.tupla_peticion.clave = ntohl(respuesta.tupla_peticion.clave);
-    //value1 = ntohl(value1);
     respuesta.tupla_peticion.valor2 = ntohl(respuesta.tupla_peticion.valor2);
-    //value3 = ntohl(value3);
     respuesta.code_error = ntohl(respuesta.code_error);
-    
-    printf("He recibido como valor1 %s\n: ", respuesta.tupla_peticion.valor1);
-
-    printf("He recibido como valor2 %d\n: ", respuesta.tupla_peticion.valor2);
-    
-
-
-
-    // pasar a string value1
-    //sprintf(respuesta.tupla_peticion.valor1, "%lu", value1);
-
-    // pasar a string value3 y luego a double, que por qué no directamente???? Porque nos gusta el riesgo
-    //sprintf(valor3, "%lu", value3);
     respuesta.tupla_peticion.valor3 = atof(valor3);
-    printf("He recibido como valor3 %f\n: ", respuesta.tupla_peticion.valor3);
-
+    
     // guardamos los valores de la resuesta para el caso en el que sea necesario devolverlos (f. get)
     strcpy(peticion->tupla_peticion.valor1, respuesta.tupla_peticion.valor1);
     peticion->tupla_peticion.valor2 = respuesta.tupla_peticion.valor2;
     peticion->tupla_peticion.valor3 = respuesta.tupla_peticion.valor3;
      
-    
     return respuesta.code_error;
 }
 
@@ -194,12 +159,10 @@ int init() {
     //creamos la peticion
     struct peticion peticion = {0};
     peticion.c_op = 0;
-
-    
-
     int code_error = send_recieve(&peticion);
     return code_error;
 }
+
 
 int set_value(int key, char *value1, int value2, double value3) {
     int code_error;
@@ -209,8 +172,6 @@ int set_value(int key, char *value1, int value2, double value3) {
     strcpy(peticion.tupla_peticion.valor1, value1);
     peticion.tupla_peticion.valor2 = value2;
     peticion.tupla_peticion.valor3 = value3;
-    
-   // sprintf(peticion.q_name, "/cliente_%d", getpid());
     
     peticion.c_op = 1;
     code_error = send_recieve(&peticion);
@@ -223,14 +184,10 @@ int get_value(int key, char *value1, int *value2, double *value3) {
     //creamos la peticion 
     struct peticion peticion = {0};
     peticion.tupla_peticion.clave = key;
-    
     peticion.c_op = 2;
-
-    
     
     int code_error = send_recieve(&peticion );
     
-    printf("EL VALOR 2 DE LA RESPUESTA ES %d\n", peticion.tupla_peticion.valor2);
     strcpy(value1, peticion.tupla_peticion.valor1);
     *value2 = peticion.tupla_peticion.valor2;
     *value3 = peticion.tupla_peticion.valor3;
@@ -248,7 +205,6 @@ int modify_value(int key, char *value1, int value2, double value3){
     peticion.tupla_peticion.valor3 = value3;
     peticion.c_op = 3;
     
-
     int code_error = send_recieve(&peticion);
 
     return code_error;
@@ -262,13 +218,10 @@ int delete_key(int id) {
         .tupla_peticion.clave = id,
         .c_op = 4
     };
-    
-
     int code_error = send_recieve(&peticion);
 
     return code_error;
 }
-
 
 
 int exist_key(int id) {
@@ -288,7 +241,6 @@ int exist_key(int id) {
 
 
 int copy_key(int key1, int key2) {  
-
     //creamos la peticion 
     struct peticion peticion = {
         .tupla_peticion.clave = key1,
@@ -296,8 +248,6 @@ int copy_key(int key1, int key2) {
         .c_op = 6
     };
     
-
-
     int code_error = send_recieve(&peticion);
 
     return code_error;

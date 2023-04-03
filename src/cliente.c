@@ -33,10 +33,10 @@ int main()
     {
         printf("get_value(): código de error %d\n", code_error);
     } else {
-        printf("get_value(): Se ha procesado correctamente la petición. Los valores obtenidos de la tupla %d son: %s, %d y %f\n\n", clave, valor1, valor2, valor3);
+        printf("get_value(): Se ha procesado correctamente la petición. Los valores obtenidos de la tupla con clave %d son: %s, %d y %f\n\n", clave, valor1, valor2, valor3);
     }
 
-    /*
+    
 
     code_error = modify_value(clave, "Modificación", 37, 7.95);
     if (code_error < 0) 
@@ -65,7 +65,24 @@ int main()
         printf("copy_key(): Se ha copiado correctamente los valores de la clave %d a la clave %d. Código de error: %d\n\n", clave, clave2, code_error);
     }
 
-    */
+    code_error = delete_key(clave);
+    if (code_error < 0) 
+    {
+        printf("delete_key(): código de error %d\n", code_error);
+    }
+    else{
+        printf("detele_key(): Se ha eliminado correctamente la clave %d. Código de error: %d\n\n", clave, code_error);
+    }
+
+    code_error = init();
+    if (code_error < 0) 
+    {
+        printf("init(): código de error %d\n", code_error);
+    } else {
+        printf("init(): Se han destruido correctametne todas las tuplas. Código de error: %d\n", code_error);
+    }
+
+    
     
     return 0; 
 }

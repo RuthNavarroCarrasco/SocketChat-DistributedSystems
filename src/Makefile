@@ -13,6 +13,8 @@ SERVER = servidor.c implementacion.c
 
 all: cliente servidor
 	 rm ../tuplas/*
+	 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:.
+
 
 cliente: $(CLIENT) $(LIB)
 	$(CC) $(DFLAGS) cliente.c -lclaves -o cliente $(LDFLAGS)
