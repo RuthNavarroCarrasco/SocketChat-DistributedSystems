@@ -12,7 +12,7 @@ LIB_OBJS = $(LIB_FILES:.c=.o)
 SERVER = servidor.c implementacion.c
 
 all: cliente servidor
-	 #rm ../tuplas/*
+	 rm ../tuplas/*
 	 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:.
 
 
