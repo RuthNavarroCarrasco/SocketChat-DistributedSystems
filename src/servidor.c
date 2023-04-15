@@ -133,7 +133,7 @@ int main(int argc, char *argv[]){
     if (argc < 2) 
     {
         printf("Pon el segundo argumento por favor te lo pido\n");
-        exit(-1);
+        return -1;
     } else {
         port_number = atoi(argv[1]);
     }
@@ -142,14 +142,14 @@ int main(int argc, char *argv[]){
      if ((sd_server = socket(AF_INET, SOCK_STREAM, 0)) == 0)
      {
         perror("socket: ");
-        exit(-1);
+        return -1;
      }
 
     // socket options
     if (setsockopt(sd_server, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt, sizeof(opt)))
      {
          perror("setsockopt: ");
-         exit(-1);
+         return -1;
      }
 
 
@@ -162,13 +162,13 @@ int main(int argc, char *argv[]){
     if (bind(sd_server, (struct sockaddr *)&address,  sizeof(address)) < 0)
     {
         perror("bind: ");
-        exit(-1);
+        return -1;
     }
 
     if (listen(sd_server, 3) < 0)
     {
         perror("listen: ") ;
-        exit(-1);
+        return -1;
     }
 
 
@@ -186,17 +186,43 @@ int main(int argc, char *argv[]){
         sd_client = accept(sd_server, (struct sockaddr *)&address,  (socklen_t*)&addrlen) ;
        	if (sd_client <= 0)
 	     {
-		perror("accept");
-		exit(-1);
+		    perror("accept");
+		    return -1;
 	    }
         
-        //se reciben todos los campos de la petición del cliente
-        read ( sd_client, (char*) &clave, sizeof(int));
-        read ( sd_client, (char*) &valor1, sizeof(valor1));
-        read ( sd_client, (char*) &valor2, sizeof(int));
-        read ( sd_client, (char*) &valor3, sizeof(valor3));
-        read ( sd_client, (char*) &clave2, sizeof(int));
-        read ( sd_client, (char*) &c_op, sizeof(int));
+
+        // Se reciben todos los campos de la petición del cliente
+        if (read(sd_client, (char*) &clave, sizeof(int)) < 0) {
+            perror("Error al leer clave");
+            return -1;
+        }
+
+        if (read(sd_client, (char*) &valor1, sizeof(valor1)) < 0) {
+            perror("Error al leer valor1");
+            return -1;
+        }
+
+        if (read(sd_client, (char*) &valor2, sizeof(int)) < 0) {
+            perror("Error al leer valor2");
+            return -1;
+        }
+
+        if (read(sd_client, (char*) &valor3, sizeof(valor3)) < 0) {
+            perror("Error al leer valor3");
+            return -1;
+        }
+
+        if (read(sd_client, (char*) &clave2, sizeof(int)) < 0) 
+        {
+            perror("Error al leer clave2");
+            return -1;
+        }
+
+        if (read(sd_client, (char*) &c_op, sizeof(int)) < 0) {
+            perror("Error al leer c_op");
+            return -1;
+        }
+
       
         
         clave = ntohl(clave);

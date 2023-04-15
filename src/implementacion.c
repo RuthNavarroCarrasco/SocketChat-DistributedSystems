@@ -14,7 +14,7 @@ int init_implementacion()
     struct dirent *next_file;
     
     char filepath[400];
-
+    
     while ( (next_file = readdir(theFolder)) != NULL )
     {
         // build the path for each file in the folder
@@ -22,6 +22,7 @@ int init_implementacion()
         remove(filepath);
     }
     closedir(theFolder);
+    
     
 
     return 0;
@@ -54,7 +55,7 @@ int set_value_implementacion(struct tupla_pet peticion)
     } 
     else 
     {
-        printf("set_value(): No se pudo abrir el archivo.\n");
+        perror("set_value(): No se pudo abrir el archivo.\n");
         return -1;
     }
 
@@ -178,7 +179,7 @@ int exist_key_implementacion(int key)
     // Comprobamos si no hay existencia del fichero
     if (access(nombre_fichero, F_OK) != 0) 
     {
-        printf("exist_key(): El fichero no existe\n");
+        perror("exist_key(): El fichero no existe\n");
         return -1;
     }
     
@@ -201,7 +202,7 @@ int copy_key_implementacion(int key1, int key2){
     //comprobamos si key1 existe
     if (access(nombre_fichero, F_OK) != 0) 
     {
-        printf("copy_key(): El fichero no existe\n");
+        perror("copy_key(): El fichero no existe\n");
         return -1;
     }
 
@@ -221,7 +222,7 @@ int copy_key_implementacion(int key1, int key2){
 
     if (access(nombre_fichero2, F_OK) == 0) {
         if (modify_value_implementacion(peticion_copiada) < 0) {
-            printf("No se ha podido copiar los valores\n");
+            perror("No se ha podido copiar los valores\n");
             return -1;
         } else {
             return 0;
@@ -233,7 +234,7 @@ int copy_key_implementacion(int key1, int key2){
     else{
          
         if (set_value_implementacion(peticion_copiada) < 0) {
-            printf("No se ha podido copiar los valores\n");
+            perror("No se ha podido copiar los valores\n");
             return -1;
         }
     }
